@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a2d6b"/>
+      <stop offset="1" stop-color="#14121c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eda100"/>
+      <stop offset="1" stop-color="#c98500"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- perfume bottle -->
+  <rect x="196" y="120" width="120" height="40" rx="10" fill="#e6e2f2"/>
+  <rect x="222" y="92" width="68" height="34" rx="8" fill="#c9c3e0"/>
+  <path d="M172 200c0-26 20-40 44-40h80c24 0 44 14 44 40v150c0 30-24 54-54 54H226c-30 0-54-24-54-54z" fill="url(#glass)"/>
+  <rect x="204" y="250" width="104" height="70" rx="10" fill="#14121c" opacity="0.18"/>
+  <circle cx="256" cy="286" r="30" fill="#fff" opacity="0.22"/>
+</svg>

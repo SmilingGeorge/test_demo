@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14121c">
+<meta name="description" content="Track customers, credit, inventory and sales for your perfume business — works offline.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Scentry — Perfume Seller Manager</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%233a2d6b'/%3E%3Cpath d='M172 200c0-26 20-40 44-40h80c24 0 44 14 44 40v150c0 30-24 54-54 54H226c-30 0-54-24-54-54z' fill='%23eda100'/%3E%3Crect x='196' y='120' width='120' height='40' rx='10' fill='%23e6e2f2'/%3E%3C/svg%3E">
+<style>
+/* Scentry — perfume seller PWA. Mobile-first, dark elegant theme with light fallback. */
+:root {
+  --bg: #14121c; --bg-2: #1c1930; --surface: #211d33; --surface-2: #2a2542; --border: #362f52; --grid: #3a3358;
+  --text-primary: #f4f2fb; --text-secondary: #b8b2d6; --muted: #7d7699;
+  --accent: #c9a44a; --accent-2: #7b62d6;
+  --ok: #1baf7a; --ok-soft: rgba(27,175,122,.16);
+  --warn: #e0a92e; --warn-soft: rgba(224,169,46,.16);
+  --danger: #e05a58; --danger-soft: rgba(224,90,88,.16);
+  --blue: #3987e5; --shadow: 0 8px 30px rgba(0,0,0,.35); --radius: 16px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f2f7; --bg-2: #ece8f2; --surface: #ffffff; --surface-2: #f7f5fb; --border: #e4dff0; --grid: #e0dbec;
+    --text-primary: #1c1830; --text-secondary: #5a5470; --muted: #8c86a0;
+    --accent: #a8842f; --accent-2: #6b52c4; --shadow: 0 6px 24px rgba(60,50,90,.12);
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(1200px 600px at 100% -10%, var(--bg-2), var(--bg)) fixed;
+  color: var(--text-primary); line-height: 1.45; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 9px; }
+.brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; font-size: 15px; color: #14121c; background: linear-gradient(135deg, var(--accent), #e6c877); }
+.brand-name { font-weight: 700; letter-spacing: .3px; font-size: 18px; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.view { max-width: 720px; margin: 0 auto; padding: 18px 16px calc(96px + var(--safe-b)); }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+h1 { font-size: 24px; letter-spacing: -.4px; }
+.sub { color: var(--muted); font-size: 13px; }
+.section-label { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 18px 0 8px; }
+.kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 15px; display: flex; flex-direction: column; gap: 3px; position: relative; overflow: hidden; }
+.kpi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent-2); }
+.kpi.warn::before { background: var(--warn); } .kpi.ok::before { background: var(--ok); } .kpi.neutral::before { background: var(--blue); }
+.kpi-label { font-size: 12px; color: var(--muted); }
+.kpi-value { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+.kpi-hint { font-size: 11px; color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.card-head h2 { font-size: 15px; font-weight: 600; }
+.grid-2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 620px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+.chart { width: 100%; min-height: 60px; }
+.link { color: var(--accent); font-size: 13px; text-decoration: none; }
+.search { width: 100%; padding: 12px 14px; margin-bottom: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 15px; }
+.search::placeholder { color: var(--muted); }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.list-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; cursor: pointer; transition: transform .08s, border-color .15s; }
+.list-row:active { transform: scale(.99); } .list-row:hover { border-color: var(--accent-2); }
+.avatar { width: 40px; height: 40px; border-radius: 12px; flex: none; display: grid; place-items: center; font-weight: 700; font-size: 16px; background: linear-gradient(135deg, var(--accent-2), #4d3aa0); color: #fff; }
+.avatar.warn { background: linear-gradient(135deg, var(--warn), #b9820f); }
+.row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.row-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-end { flex: none; text-align: right; }
+.muted { color: var(--muted); font-weight: 400; font-size: .85em; }
+.pill { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); } .pill.ok { background: var(--ok-soft); color: var(--ok); }
+.stock { font-weight: 700; font-size: 16px; }
+.stock em { display: block; font-style: normal; font-size: 10px; font-weight: 500; color: var(--muted); }
+.stock.warn { color: var(--warn); } .stock.ok { color: var(--text-primary); }
+.btn { font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; padding: 10px 16px; border-radius: 11px; border: 1px solid transparent; transition: filter .15s, background .15s; white-space: nowrap; }
+.btn:active { filter: brightness(.94); }
+.btn.primary { background: linear-gradient(135deg, var(--accent-2), #4d3aa0); color: #fff; }
+.btn.ok { background: var(--ok); color: #fff; } .btn.danger { background: var(--danger); color: #fff; }
+.btn.ghost { background: var(--surface-2); color: var(--text-primary); border-color: var(--border); }
+.btn.ghost:active { background: var(--border); } .btn:disabled { opacity: .45; cursor: not-allowed; }
+.chip { font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--accent); background: transparent; color: var(--accent); }
+.icon-btn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); font-size: 18px; cursor: pointer; display: grid; place-items: center; }
+.mini-link { background: none; border: none; color: var(--accent); font: inherit; font-size: 12px; cursor: pointer; padding: 4px 0 0; text-align: left; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.btn-row .btn { flex: 1 1 auto; }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: space-around; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--border); padding: 8px 6px calc(8px + var(--safe-b)); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: var(--muted); font-size: 10.5px; font-weight: 600; padding: 4px 2px; border-radius: 10px; }
+.nav-ico { font-size: 18px; line-height: 1; } .nav-item.active { color: var(--accent); }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.table td { padding: 11px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.table tbody tr { cursor: pointer; } .table tbody tr:active { background: var(--surface-2); }
+.table .num { text-align: right; white-space: nowrap; }
+.table .items { color: var(--text-secondary); max-width: 180px; }
+.table .when { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.table tfoot td { border: none; padding: 6px 10px; color: var(--text-secondary); }
+.table tfoot .due td { color: var(--warn); font-weight: 600; }
+.modal-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(8,6,16,.6); backdrop-filter: blur(3px); display: flex; align-items: flex-end; justify-content: center; animation: fade .15s ease; }
+@media (min-width: 560px) { .modal-overlay { align-items: center; } }
+.modal { background: var(--surface); width: 100%; max-width: 480px; border: 1px solid var(--border); border-radius: 22px 22px 0 0; max-height: 92vh; overflow-y: auto; box-shadow: var(--shadow); animation: slideup .22s cubic-bezier(.2,.8,.2,1); }
+@media (min-width: 560px) { .modal { border-radius: 22px; } }
+.modal-head { position: sticky; top: 0; background: var(--surface); display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 12px; border-bottom: 1px solid var(--border); z-index: 1; }
+.modal-head h2 { font-size: 18px; }
+.modal-body { padding: 16px 18px calc(20px + var(--safe-b)); }
+@keyframes fade { from { opacity: 0; } } @keyframes slideup { from { transform: translateY(30px); opacity: .5; } }
+.form { display: flex; flex-direction: column; gap: 13px; }
+.form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+.form input, .form select, .form textarea { font: inherit; font-size: 15px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 11px 13px; width: 100%; }
+.form input:focus, .form select:focus, .form textarea:focus { outline: 2px solid var(--accent-2); outline-offset: 0; border-color: transparent; }
+.form textarea { resize: vertical; }
+.form-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+.form-actions .btn { flex: 1; }
+@media (min-width: 480px) { .form-actions .btn { flex: 0 1 auto; min-width: 110px; } }
+.hint-line { font-size: 13px; color: var(--text-secondary); }
+.confirm-msg { font-size: 15px; color: var(--text-secondary); margin-bottom: 8px; }
+.detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 6px; }
+.detail-sub { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.detail-note { font-size: 13px; color: var(--muted); }
+.balance { text-align: right; display: flex; flex-direction: column; padding: 8px 12px; border-radius: 12px; }
+.balance span { font-size: 11px; color: var(--muted); } .balance strong { font-size: 20px; }
+.balance.warn { background: var(--warn-soft); } .balance.warn strong { color: var(--warn); }
+.balance.ok { background: var(--ok-soft); } .balance.ok strong { color: var(--ok); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 6px; }
+.detail-grid > div { display: flex; flex-direction: column; background: var(--surface-2); padding: 10px 12px; border-radius: 11px; }
+.detail-grid span { font-size: 11px; color: var(--muted); } .detail-grid strong { font-size: 15px; }
+.text-warn { color: var(--warn); }
+.history { display: flex; flex-direction: column; }
+.hist-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.hist-row:last-child { border-bottom: none; }
+.hist-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 15px; flex: none; background: var(--surface-2); }
+.hist-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.hist-main > span:first-child { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-date { font-size: 11.5px; color: var(--muted); }
+.hist-amt { font-weight: 600; text-align: right; white-space: nowrap; font-size: 14px; }
+.hist-amt.payment { color: var(--ok); }
+.hist-amt em { display: block; font-style: normal; font-size: 10.5px; color: var(--warn); font-weight: 500; }
+.stepper { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.stepper .btn { flex: 1; min-width: 52px; text-align: center; }
+.cart { display: flex; flex-direction: column; gap: 8px; }
+.cart-row { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border-radius: 11px; padding: 9px 12px; }
+.cart-name { flex: 1; font-size: 14px; font-weight: 500; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qty { display: flex; align-items: center; gap: 8px; }
+.qty button { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); font-size: 16px; cursor: pointer; }
+.qty span { min-width: 18px; text-align: center; font-weight: 600; }
+.cart-sum { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.cart-rm { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 4px; }
+.sale-total { display: flex; justify-content: space-between; align-items: center; padding: 12px 2px 4px; border-top: 1px solid var(--border); margin-top: 4px; }
+.sale-total strong { font-size: 20px; }
+.credit-note { font-size: 12.5px; color: var(--muted); min-height: 1em; }
+.credit-note.warn { color: var(--warn); font-weight: 600; }
+.empty { color: var(--muted); text-align: center; padding: 24px 10px; font-size: 14px; }
+.all-clear { text-align: center; padding: 36px 16px; color: var(--ok); font-weight: 600; background: var(--ok-soft); border-radius: 14px; }
+.danger-zone { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); font-weight: 600; }
+#toast { position: fixed; left: 50%; bottom: calc(90px + var(--safe-b)); transform: translateX(-50%) translateY(20px); background: var(--text-primary); color: var(--bg); padding: 11px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; box-shadow: var(--shadow); }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.chart-tip { position: fixed; z-index: 70; pointer-events: none; opacity: 0; transition: opacity .12s; background: var(--text-primary); color: var(--bg); padding: 7px 11px; border-radius: 9px; font-size: 12px; line-height: 1.4; box-shadow: var(--shadow); max-width: 200px; }
+.chart-tip span { opacity: .7; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">✦</span><span class="brand-name">Scentry</span></div>
+  <div class="topbar-actions">
+    <button class="chip" id="install-btn" hidden>Install</button>
+    <button class="icon-btn" id="data-btn" aria-label="Data and backup" title="Data &amp; backup">⋯</button>
+  </div>
+</header>
+<main id="view" class="view"></main>
+<nav class="tabbar" aria-label="Primary">
+  <a class="nav-item" data-route="dashboard" href="#/dashboard"><span class="nav-ico">▦</span><span>Home</span></a>
+  <a class="nav-item" data-route="customers" href="#/customers"><span class="nav-ico">☺</span><span>Customers</span></a>
+  <a class="nav-item" data-route="sales" href="#/sales"><span class="nav-ico">🛍</span><span>Sales</span></a>
+  <a class="nav-item" data-route="inventory" href="#/inventory"><span class="nav-ico">▤</span><span>Stock</span></a>
+  <a class="nav-item" data-route="credit" href="#/credit"><span class="nav-ico">✦</span><span>Credit</span></a>
+</nav>
+
+<script>
+"use strict";
+/* ============================ STORE ============================ */
+const KEY = 'scentry.db.v1';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const now = () => new Date().toISOString();
+
+function seed() {
+  const t = Date.now(), day = 86400000, iso = (o) => new Date(t - o * day).toISOString();
+  const products = [
+    { id: uid(), name: 'Oud Royale', brand: 'Maison Noir', size: 100, cost: 22, price: 55, stock: 14, createdAt: iso(30) },
+    { id: uid(), name: 'Rose Absolue', brand: 'Fleur', size: 50, cost: 15, price: 40, stock: 6, createdAt: iso(28) },
+    { id: uid(), name: 'Citrus Bloom', brand: 'Aqua', size: 75, cost: 12, price: 32, stock: 3, createdAt: iso(20) },
+    { id: uid(), name: 'Amber Nuit', brand: 'Maison Noir', size: 100, cost: 25, price: 60, stock: 9, createdAt: iso(18) },
+    { id: uid(), name: 'Vanilla Musk', brand: 'Fleur', size: 50, cost: 10, price: 28, stock: 2, createdAt: iso(12) }
+  ];
+  const customers = [
+    { id: uid(), name: 'Amina Yusuf', phone: '0712 445 118', note: 'Prefers oud & amber', createdAt: iso(26) },
+    { id: uid(), name: 'David Okoro', phone: '0803 221 907', note: '', createdAt: iso(21) },
+    { id: uid(), name: 'Grace Wangui', phone: '0722 908 334', note: 'Buys for resale', createdAt: iso(15) },
+    { id: uid(), name: 'Samuel Otieno', phone: '0733 654 210', note: '', createdAt: iso(9) }
+  ];
+  const p = (i) => products[i], c = (i) => customers[i];
+  const line = (prod, qty) => ({ productId: prod.id, name: prod.name, qty, price: prod.price });
+  const sales = [
+    { id: uid(), customerId: c(0).id, items: [line(p(0), 1)], total: 55, paid: 55, createdAt: iso(6) },
+    { id: uid(), customerId: c(2).id, items: [line(p(1), 2), line(p(4), 1)], total: 108, paid: 50, createdAt: iso(5) },
+    { id: uid(), customerId: c(1).id, items: [line(p(3), 1)], total: 60, paid: 0, createdAt: iso(4) },
+    { id: uid(), customerId: c(0).id, items: [line(p(2), 1)], total: 32, paid: 32, createdAt: iso(3) },
+    { id: uid(), customerId: c(3).id, items: [line(p(0), 1), line(p(3), 1)], total: 115, paid: 60, createdAt: iso(1) },
+    { id: uid(), customerId: c(2).id, items: [line(p(4), 2)], total: 56, paid: 56, createdAt: iso(0) }
+  ];
+  const payments = [{ id: uid(), customerId: c(2).id, amount: 30, note: 'Part payment', createdAt: iso(2) }];
+  return { customers, products, sales, payments, settings: { currency: 'KSh', lowStock: 5 } };
+}
+
+let db = load();
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  const fresh = seed();
+  try { localStorage.setItem(KEY, JSON.stringify(fresh)); } catch (e) {}
+  return fresh;
+}
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+  window.dispatchEvent(new CustomEvent('scentry:change'));
+}
+
+const Store = {
+  get currency() { return db.settings.currency; },
+  get lowStock() { return db.settings.lowStock; },
+  setSettings(patch) { Object.assign(db.settings, patch); persist(); },
+  customers: () => [...db.customers].sort((a, b) => a.name.localeCompare(b.name)),
+  products: () => [...db.products].sort((a, b) => a.name.localeCompare(b.name)),
+  sales: () => [...db.sales].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+  payments: () => [...db.payments].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+  customer: (id) => db.customers.find((c) => c.id === id),
+  product: (id) => db.products.find((p) => p.id === id),
+  balance(customerId) {
+    const owed = db.sales.filter((s) => s.customerId === customerId).reduce((s, x) => s + (x.total - x.paid), 0);
+    const paid = db.payments.filter((p) => p.customerId === customerId).reduce((s, x) => s + x.amount, 0);
+    return owed - paid;
+  },
+  addCustomer({ name, phone, note }) { db.customers.push({ id: uid(), name: name.trim(), phone: phone.trim(), note: (note || '').trim(), createdAt: now() }); persist(); },
+  updateCustomer(id, patch) { const c = db.customers.find((x) => x.id === id); if (c) { Object.assign(c, patch); persist(); } },
+  deleteCustomer(id) {
+    db.customers = db.customers.filter((c) => c.id !== id);
+    db.sales = db.sales.filter((s) => s.customerId !== id);
+    db.payments = db.payments.filter((p) => p.customerId !== id);
+    persist();
+  },
+  addProduct({ name, brand, size, cost, price, stock }) {
+    db.products.push({ id: uid(), name: name.trim(), brand: (brand || '').trim(), size: +size || 0, cost: +cost || 0, price: +price || 0, stock: +stock || 0, createdAt: now() });
+    persist();
+  },
+  updateProduct(id, patch) {
+    const p = db.products.find((x) => x.id === id);
+    if (p) { ['size', 'cost', 'price', 'stock'].forEach((k) => { if (k in patch) patch[k] = +patch[k] || 0; }); Object.assign(p, patch); persist(); }
+  },
+  adjustStock(id, delta) { const p = db.products.find((x) => x.id === id); if (p) { p.stock = Math.max(0, p.stock + delta); persist(); } },
+  deleteProduct(id) { db.products = db.products.filter((p) => p.id !== id); persist(); },
+  addSale({ customerId, items, paid }) {
+    const lines = []; let total = 0;
+    for (const it of items) {
+      const p = db.products.find((x) => x.id === it.productId);
+      if (!p || it.qty <= 0) continue;
+      const qty = Math.min(it.qty, p.stock);
+      if (qty <= 0) continue;
+      p.stock -= qty; total += qty * p.price;
+      lines.push({ productId: p.id, name: p.name, qty, price: p.price });
+    }
+    if (!lines.length) return null;
+    const paidAmount = Math.max(0, Math.min(+paid || 0, total));
+    const sale = { id: uid(), customerId, items: lines, total, paid: paidAmount, createdAt: now() };
+    db.sales.push(sale); persist(); return sale;
+  },
+  deleteSale(id) {
+    const sale = db.sales.find((s) => s.id === id);
+    if (sale) {
+      sale.items.forEach((it) => { const p = db.products.find((x) => x.id === it.productId); if (p) p.stock += it.qty; });
+      db.sales = db.sales.filter((s) => s.id !== id); persist();
+    }
+  },
+  addPayment({ customerId, amount, note }) { db.payments.push({ id: uid(), customerId, amount: Math.max(0, +amount || 0), note: (note || '').trim(), createdAt: now() }); persist(); },
+  deletePayment(id) { db.payments = db.payments.filter((p) => p.id !== id); persist(); },
+  metrics() {
+    const totalCredit = db.customers.reduce((s, c) => s + Math.max(0, this.balance(c.id)), 0);
+    const invValue = db.products.reduce((s, p) => s + p.stock * p.price, 0);
+    const invCost = db.products.reduce((s, p) => s + p.stock * p.cost, 0);
+    const lowStock = db.products.filter((p) => p.stock <= db.settings.lowStock).length;
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+    const monthSales = db.sales.filter((s) => new Date(s.createdAt) >= monthStart);
+    const monthRevenue = monthSales.reduce((s, x) => s + x.total, 0);
+    return { customers: db.customers.length, products: db.products.length, totalCredit, invValue, invCost, lowStock, monthRevenue, monthCount: monthSales.length };
+  },
+  dailyRevenue(days = 14) {
+    const out = [], base = new Date(); base.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(base); d.setDate(base.getDate() - i);
+      const next = new Date(d); next.setDate(d.getDate() + 1);
+      const total = db.sales.filter((s) => { const t = new Date(s.createdAt); return t >= d && t < next; }).reduce((sum, s) => sum + s.total, 0);
+      out.push({ date: d, total });
+    }
+    return out;
+  },
+  topProducts(limit = 5) {
+    const map = new Map();
+    db.sales.forEach((s) => s.items.forEach((it) => {
+      const cur = map.get(it.name) || { name: it.name, qty: 0, revenue: 0 };
+      cur.qty += it.qty; cur.revenue += it.qty * it.price; map.set(it.name, cur);
+    }));
+    return [...map.values()].sort((a, b) => b.qty - a.qty).slice(0, limit);
+  },
+  export() { return JSON.stringify(db, null, 2); },
+  import(json) {
+    const parsed = JSON.parse(json);
+    if (!parsed.customers || !parsed.products) throw new Error('Invalid backup file');
+    db = parsed;
+    if (!db.settings) db.settings = { currency: 'KSh', lowStock: 5 };
+    if (!db.payments) db.payments = [];
+    persist();
+  },
+  reset() { db = seed(); persist(); }
+};
+function money(n) {
+  const v = Math.round((+n || 0) * 100) / 100;
+  return Store.currency + ' ' + v.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ============================ CHARTS ============================ */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const svgEl = (name, attrs = {}) => { const n = document.createElementNS(SVGNS, name); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
+const BLUE = '#2a78d6', BLUE_SOFT = '#9ec5f4', GRID = 'var(--grid)', INK = 'var(--text-secondary)';
+function tooltip() {
+  let tip = document.getElementById('chart-tip');
+  if (!tip) { tip = document.createElement('div'); tip.id = 'chart-tip'; tip.className = 'chart-tip'; document.body.appendChild(tip); }
+  return tip;
+}
+function showTip(evt, html) {
+  const tip = tooltip(); tip.innerHTML = html; tip.style.opacity = '1';
+  const pad = 12; let x = evt.clientX + pad, y = evt.clientY + pad;
+  const r = tip.getBoundingClientRect();
+  if (x + r.width > window.innerWidth) x = evt.clientX - r.width - pad;
+  if (y + r.height > window.innerHeight) y = evt.clientY - r.height - pad;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function hideTip() { const t = document.getElementById('chart-tip'); if (t) t.style.opacity = '0'; }
+function barTrend(mount, data) {
+  mount.innerHTML = '';
+  const W = mount.clientWidth || 320, H = 180, pad = { t: 12, r: 8, b: 22, l: 8 };
+  const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+  const max = Math.max(1, ...data.map((d) => d.total)), n = data.length, gap = 4;
+  const bw = Math.max(3, (iw - gap * (n - 1)) / n);
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H, role: 'img', 'aria-label': 'Daily revenue trend' });
+  svg.appendChild(svgEl('line', { x1: pad.l, y1: pad.t + ih, x2: pad.l + iw, y2: pad.t + ih, stroke: GRID, 'stroke-width': 1 }));
+  data.forEach((d, i) => {
+    const h = (d.total / max) * ih, x = pad.l + i * (bw + gap), y = pad.t + ih - h;
+    const bar = svgEl('rect', { x, y: h < 1 ? pad.t + ih - 2 : y, width: bw, height: Math.max(2, h), rx: Math.min(4, bw / 2), fill: d.total ? BLUE : BLUE_SOFT, opacity: d.total ? 1 : 0.5 });
+    const label = () => `<strong>${money(d.total)}</strong><br><span>${d.date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>`;
+    bar.addEventListener('mouseenter', (e) => showTip(e, label()));
+    bar.addEventListener('mousemove', (e) => showTip(e, label()));
+    bar.addEventListener('mouseleave', hideTip);
+    svg.appendChild(bar);
+    if (i === 0 || i === n - 1 || i === Math.floor(n / 2)) {
+      const t = svgEl('text', { x: x + bw / 2, y: H - 6, 'text-anchor': 'middle', 'font-size': 10, fill: INK });
+      t.textContent = d.date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+      svg.appendChild(t);
+    }
+  });
+  mount.appendChild(svg);
+}
+function hBar(mount, rows) {
+  mount.innerHTML = '';
+  if (!rows.length) { mount.innerHTML = '<p class="empty">No sales recorded yet.</p>'; return; }
+  const W = mount.clientWidth || 320, rowH = 34, pad = { t: 6, r: 10, b: 6, l: 10 };
+  const H = pad.t + pad.b + rows.length * rowH;
+  const labelW = Math.min(120, W * 0.42), trackX = pad.l + labelW + 8, trackW = W - trackX - pad.r - 44;
+  const max = Math.max(1, ...rows.map((r) => r.qty));
+  const shades = ['#2a78d6', '#3987e5', '#5598e7', '#6da7ec', '#86b6ef'];
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H, role: 'img', 'aria-label': 'Top products by units sold' });
+  rows.forEach((r, i) => {
+    const cy = pad.t + i * rowH + rowH / 2;
+    const name = svgEl('text', { x: pad.l, y: cy + 4, 'font-size': 12, fill: 'var(--text-primary)' });
+    name.textContent = r.name.length > 16 ? r.name.slice(0, 15) + '…' : r.name;
+    svg.appendChild(name);
+    svg.appendChild(svgEl('rect', { x: trackX, y: cy - 6, width: trackW, height: 12, rx: 4, fill: GRID, opacity: 0.5 }));
+    const w = Math.max(4, (r.qty / max) * trackW);
+    const bar = svgEl('rect', { x: trackX, y: cy - 6, width: w, height: 12, rx: 4, fill: shades[i % shades.length] });
+    const label = () => `<strong>${r.name}</strong><br><span>${r.qty} sold · ${money(r.revenue)}</span>`;
+    bar.addEventListener('mouseenter', (e) => showTip(e, label()));
+    bar.addEventListener('mousemove', (e) => showTip(e, label()));
+    bar.addEventListener('mouseleave', hideTip);
+    svg.appendChild(bar);
+    const val = svgEl('text', { x: trackX + trackW + 8, y: cy + 4, 'font-size': 12, fill: INK });
+    val.textContent = r.qty; svg.appendChild(val);
+  });
+  mount.appendChild(svg);
+}
+
+/* ============================ APP ============================ */
+const app = document.getElementById('view');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function toast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function modal(title, bodyHTML, onMount) {
+  closeModal();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay'; overlay.id = 'modal';
+  overlay.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <header class="modal-head"><h2>${esc(title)}</h2><button class="icon-btn" data-close aria-label="Close">✕</button></header>
+      <div class="modal-body">${bodyHTML}</div></div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.hasAttribute('data-close')) closeModal(); });
+  document.addEventListener('keydown', escClose);
+  if (onMount) onMount(overlay);
+  const first = overlay.querySelector('input, select, textarea, button:not([data-close])');
+  if (first) first.focus();
+}
+function escClose(e) { if (e.key === 'Escape') closeModal(); }
+function closeModal() { const m = document.getElementById('modal'); if (m) m.remove(); document.removeEventListener('keydown', escClose); }
+function confirmDialog(msg, onYes) {
+  modal('Please confirm', `<p class="confirm-msg">${esc(msg)}</p>
+    <div class="form-actions"><button class="btn ghost" data-close>Cancel</button><button class="btn danger" id="confirm-yes">Delete</button></div>`,
+    (o) => { o.querySelector('#confirm-yes').addEventListener('click', () => { closeModal(); onYes(); }); });
+}
+const routes = ['dashboard', 'customers', 'inventory', 'sales', 'credit'];
+function currentRoute() { const r = location.hash.replace('#/', '').split('/')[0]; return routes.includes(r) ? r : 'dashboard'; }
+window.addEventListener('hashchange', render);
+window.addEventListener('scentry:change', render);
+function render() {
+  const route = currentRoute();
+  document.querySelectorAll('.nav-item').forEach((n) => n.classList.toggle('active', n.dataset.route === route));
+  ({ dashboard: viewDashboard, customers: viewCustomers, inventory: viewInventory, sales: viewSales, credit: viewCredit }[route])();
+}
+function viewDashboard() {
+  const m = Store.metrics();
+  app.innerHTML = `<div class="page-head"><div><h1>Dashboard</h1><p class="sub">Your business at a glance</p></div>
+      <button class="btn primary" id="quick-sale">+ New sale</button></div>
+    <div class="kpis">
+      ${kpi('Outstanding credit', money(m.totalCredit), m.totalCredit > 0 ? 'warn' : 'ok', 'Owed by customers')}
+      ${kpi('Revenue this month', money(m.monthRevenue), 'ok', m.monthCount + ' sale' + (m.monthCount === 1 ? '' : 's'))}
+      ${kpi('Inventory value', money(m.invValue), 'neutral', m.products + ' products in stock')}
+      ${kpi('Low stock', String(m.lowStock), m.lowStock ? 'warn' : 'ok', '≤ ' + Store.lowStock + ' units left')}
+    </div>
+    <div class="grid-2">
+      <section class="card"><div class="card-head"><h2>Revenue · last 14 days</h2></div><div id="chart-trend" class="chart"></div></section>
+      <section class="card"><div class="card-head"><h2>Top products</h2></div><div id="chart-top" class="chart"></div></section>
+    </div>
+    <section class="card"><div class="card-head"><h2>Recent sales</h2><a href="#/sales" class="link">View all</a></div>${salesTable(Store.sales().slice(0, 6))}</section>`;
+  barTrend(document.getElementById('chart-trend'), Store.dailyRevenue(14));
+  hBar(document.getElementById('chart-top'), Store.topProducts(5));
+  document.getElementById('quick-sale').addEventListener('click', () => saleForm());
+}
+function kpi(label, value, tone, hint) {
+  return `<div class="kpi ${tone}"><span class="kpi-label">${esc(label)}</span><span class="kpi-value">${esc(value)}</span><span class="kpi-hint">${esc(hint)}</span></div>`;
+}
+function viewCustomers() {
+  const list = Store.customers();
+  app.innerHTML = `<div class="page-head"><div><h1>Customers</h1><p class="sub">${list.length} total</p></div>
+      <button class="btn primary" id="add-customer">+ Add customer</button></div>
+    <input class="search" id="cust-search" placeholder="Search by name or phone…" aria-label="Search customers">
+    <div class="list" id="cust-list">${list.map(customerRow).join('') || emptyState('No customers yet.')}</div>`;
+  document.getElementById('add-customer').addEventListener('click', () => customerForm());
+  document.getElementById('cust-search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    const filtered = list.filter((c) => c.name.toLowerCase().includes(q) || c.phone.toLowerCase().includes(q));
+    document.getElementById('cust-list').innerHTML = filtered.map(customerRow).join('') || emptyState('No matches.');
+    bindCustomerRows();
+  });
+  bindCustomerRows();
+}
+function customerRow(c) {
+  const bal = Store.balance(c.id), owes = bal > 0.005;
+  return `<div class="list-row" data-cust="${c.id}">
+    <div class="avatar">${esc(c.name.slice(0, 1).toUpperCase())}</div>
+    <div class="row-main"><span class="row-title">${esc(c.name)}</span><span class="row-sub">${esc(c.phone || 'No phone')}${c.note ? ' · ' + esc(c.note) : ''}</span></div>
+    <div class="row-end">${owes ? `<span class="pill warn">${money(bal)} owed</span>` : `<span class="pill ok">Clear</span>`}</div></div>`;
+}
+function bindCustomerRows() {
+  document.querySelectorAll('#cust-list .list-row').forEach((row) => row.addEventListener('click', () => customerDetail(row.dataset.cust)));
+}
+function customerForm(existing) {
+  const c = existing || { name: '', phone: '', note: '' };
+  modal(existing ? 'Edit customer' : 'Add customer', `<form id="cust-form" class="form">
+      <label>Name<input name="name" required value="${esc(c.name)}" autocomplete="off"></label>
+      <label>Phone<input name="phone" value="${esc(c.phone)}" inputmode="tel" autocomplete="off"></label>
+      <label>Note<textarea name="note" rows="2">${esc(c.note)}</textarea></label>
+      <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn primary">${existing ? 'Save' : 'Add'}</button></div>
+    </form>`, (o) => {
+    o.querySelector('#cust-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target), data = { name: f.get('name'), phone: f.get('phone'), note: f.get('note') };
+      if (!data.name.trim()) return;
+      if (existing) { Store.updateCustomer(existing.id, data); toast('Customer updated'); } else { Store.addCustomer(data); toast('Customer added'); }
+      closeModal();
+    });
+  });
+}
+function customerDetail(id) {
+  const c = Store.customer(id); if (!c) return;
+  const bal = Store.balance(id);
+  const sales = Store.sales().filter((s) => s.customerId === id);
+  const payments = Store.payments().filter((p) => p.customerId === id);
+  const history = [
+    ...sales.map((s) => ({ t: s.createdAt, type: 'sale', label: s.items.map((i) => `${i.qty}× ${i.name}`).join(', '), amt: s.total, paid: s.paid })),
+    ...payments.map((p) => ({ t: p.createdAt, type: 'payment', label: p.note || 'Payment received', amt: p.amount }))
+  ].sort((a, b) => b.t.localeCompare(a.t));
+  modal(c.name, `<div class="detail-head">
+      <div><p class="detail-sub">${esc(c.phone || 'No phone')}</p>${c.note ? `<p class="detail-note">${esc(c.note)}</p>` : ''}</div>
+      <div class="balance ${bal > 0.005 ? 'warn' : 'ok'}"><span>${bal > 0.005 ? 'Owes you' : 'Balance'}</span><strong>${money(Math.max(0, bal))}</strong></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" id="c-sale">+ Sale</button>
+      <button class="btn ok" id="c-pay" ${bal > 0.005 ? '' : 'disabled'}>Record payment</button>
+      <button class="btn ghost" id="c-edit">Edit</button>
+      <button class="btn danger" id="c-del">Delete</button>
+    </div>
+    <h3 class="section-label">History</h3>
+    <div class="history">${history.length ? history.map((h) => `
+        <div class="hist-row"><span class="hist-icon ${h.type}">${h.type === 'sale' ? '🛍️' : '💵'}</span>
+          <div class="hist-main"><span>${esc(h.label)}</span><span class="hist-date">${fmtDate(h.t)}</span></div>
+          <span class="hist-amt ${h.type}">${h.type === 'payment' ? '−' : ''}${money(h.amt)}${h.type === 'sale' && h.paid < h.amt ? `<em>${money(h.amt - h.paid)} credit</em>` : ''}</span>
+        </div>`).join('') : emptyState('No activity yet.')}</div>`, (o) => {
+    o.querySelector('#c-sale').addEventListener('click', () => saleForm(id));
+    o.querySelector('#c-edit').addEventListener('click', () => customerForm(c));
+    const pay = o.querySelector('#c-pay');
+    if (pay && !pay.disabled) pay.addEventListener('click', () => paymentForm(id, bal));
+    o.querySelector('#c-del').addEventListener('click', () =>
+      confirmDialog(`Delete ${c.name}? This also removes their sales and payments.`, () => { Store.deleteCustomer(id); toast('Customer deleted'); closeModal(); }));
+  });
+}
+function paymentForm(customerId, bal) {
+  modal('Record payment', `<form id="pay-form" class="form">
+      <p class="hint-line">Outstanding: <strong>${money(Math.max(0, bal))}</strong></p>
+      <label>Amount received<input name="amount" type="number" min="0" step="any" value="${Math.max(0, bal)}" required></label>
+      <label>Note<input name="note" placeholder="Optional"></label>
+      <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn ok">Record</button></div>
+    </form>`, (o) => {
+    o.querySelector('#pay-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target), amount = +f.get('amount');
+      if (amount <= 0) return;
+      Store.addPayment({ customerId, amount, note: f.get('note') }); toast('Payment recorded'); closeModal();
+    });
+  });
+}
+function viewInventory() {
+  const products = Store.products();
+  app.innerHTML = `<div class="page-head"><div><h1>Inventory</h1><p class="sub">${products.length} products</p></div>
+      <button class="btn primary" id="add-product">+ Add product</button></div>
+    <input class="search" id="prod-search" placeholder="Search products…" aria-label="Search products">
+    <div class="list" id="prod-list">${products.map(productRow).join('') || emptyState('No products yet.')}</div>`;
+  document.getElementById('add-product').addEventListener('click', () => productForm());
+  document.getElementById('prod-search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    const filtered = products.filter((p) => (p.name + ' ' + p.brand).toLowerCase().includes(q));
+    document.getElementById('prod-list').innerHTML = filtered.map(productRow).join('') || emptyState('No matches.');
+    bindProductRows();
+  });
+  bindProductRows();
+}
+function productRow(p) {
+  const low = p.stock <= Store.lowStock;
+  return `<div class="list-row" data-prod="${p.id}">
+    <div class="row-main"><span class="row-title">${esc(p.name)} <span class="muted">${p.size ? p.size + 'ml' : ''}</span></span>
+      <span class="row-sub">${esc(p.brand || '—')} · ${money(p.price)}</span></div>
+    <div class="row-end"><span class="stock ${low ? 'warn' : 'ok'}">${p.stock} <em>in stock</em></span></div></div>`;
+}
+function bindProductRows() {
+  document.querySelectorAll('#prod-list .list-row').forEach((row) => row.addEventListener('click', () => productDetail(row.dataset.prod)));
+}
+function productForm(existing) {
+  const p = existing || { name: '', brand: '', size: '', cost: '', price: '', stock: '' };
+  modal(existing ? 'Edit product' : 'Add product', `<form id="prod-form" class="form">
+      <label>Name<input name="name" required value="${esc(p.name)}" autocomplete="off"></label>
+      <label>Brand<input name="brand" value="${esc(p.brand)}" autocomplete="off"></label>
+      <div class="form-cols"><label>Size (ml)<input name="size" type="number" min="0" value="${esc(p.size)}"></label>
+        <label>Stock (units)<input name="stock" type="number" min="0" value="${esc(p.stock)}"></label></div>
+      <div class="form-cols"><label>Cost price<input name="cost" type="number" min="0" step="any" value="${esc(p.cost)}"></label>
+        <label>Sell price<input name="price" type="number" min="0" step="any" value="${esc(p.price)}" required></label></div>
+      <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn primary">${existing ? 'Save' : 'Add'}</button></div>
+    </form>`, (o) => {
+    o.querySelector('#prod-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const data = { name: f.get('name'), brand: f.get('brand'), size: f.get('size'), cost: f.get('cost'), price: f.get('price'), stock: f.get('stock') };
+      if (!data.name.trim()) return;
+      if (existing) { Store.updateProduct(existing.id, data); toast('Product updated'); } else { Store.addProduct(data); toast('Product added'); }
+      closeModal();
+    });
+  });
+}
+function productDetail(id) {
+  const p = Store.product(id); if (!p) return;
+  const margin = p.price - p.cost, marginPct = p.price ? Math.round((margin / p.price) * 100) : 0;
+  modal(p.name, `<div class="detail-grid">
+      <div><span>Brand</span><strong>${esc(p.brand || '—')}</strong></div>
+      <div><span>Size</span><strong>${p.size ? p.size + ' ml' : '—'}</strong></div>
+      <div><span>Sell price</span><strong>${money(p.price)}</strong></div>
+      <div><span>Cost</span><strong>${money(p.cost)}</strong></div>
+      <div><span>Margin</span><strong>${money(margin)} (${marginPct}%)</strong></div>
+      <div><span>Stock value</span><strong>${money(p.stock * p.price)}</strong></div></div>
+    <h3 class="section-label">Stock: <span class="${p.stock <= Store.lowStock ? 'text-warn' : ''}">${p.stock} units</span></h3>
+    <div class="stepper">
+      <button class="btn ghost" data-delta="-1">−1</button><button class="btn ghost" data-delta="-5">−5</button>
+      <button class="btn ghost" data-delta="1">+1</button><button class="btn ghost" data-delta="5">+5</button><button class="btn ghost" data-delta="10">+10</button>
+    </div>
+    <div class="btn-row"><button class="btn primary" id="p-edit">Edit</button><button class="btn danger" id="p-del">Delete</button></div>`, (o) => {
+    o.querySelectorAll('[data-delta]').forEach((b) => b.addEventListener('click', () => { Store.adjustStock(id, +b.dataset.delta); toast('Stock updated'); productDetail(id); }));
+    o.querySelector('#p-edit').addEventListener('click', () => productForm(p));
+    o.querySelector('#p-del').addEventListener('click', () => confirmDialog(`Delete ${p.name}?`, () => { Store.deleteProduct(id); toast('Product deleted'); closeModal(); }));
+  });
+}
+function viewSales() {
+  app.innerHTML = `<div class="page-head"><div><h1>Sales</h1><p class="sub">${Store.sales().length} recorded</p></div>
+      <button class="btn primary" id="new-sale">+ New sale</button></div>
+    <section class="card">${salesTable(Store.sales())}</section>`;
+  document.getElementById('new-sale').addEventListener('click', () => saleForm());
+  bindSaleRows();
+}
+function salesTable(sales) {
+  if (!sales.length) return emptyState('No sales recorded yet.');
+  return `<div class="table-wrap"><table class="table">
+    <thead><tr><th>Customer</th><th>Items</th><th class="num">Total</th><th class="num">Status</th><th>When</th></tr></thead>
+    <tbody>${sales.map((s) => {
+        const c = Store.customer(s.customerId), credit = s.total - s.paid;
+        return `<tr data-sale="${s.id}"><td>${esc(c ? c.name : 'Unknown')}</td>
+          <td class="items">${esc(s.items.map((i) => `${i.qty}× ${i.name}`).join(', '))}</td>
+          <td class="num">${money(s.total)}</td>
+          <td class="num">${credit > 0.005 ? `<span class="pill warn">${money(credit)} due</span>` : `<span class="pill ok">Paid</span>`}</td>
+          <td class="when">${fmtDate(s.createdAt)}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+}
+function bindSaleRows() { document.querySelectorAll('[data-sale]').forEach((row) => row.addEventListener('click', () => saleDetail(row.dataset.sale))); }
+function saleDetail(id) {
+  const s = Store.sales().find((x) => x.id === id); if (!s) return;
+  const c = Store.customer(s.customerId), credit = s.total - s.paid;
+  modal('Sale details', `<div class="detail-head"><div><p class="detail-sub">${esc(c ? c.name : 'Unknown')}</p><p class="detail-note">${fmtDate(s.createdAt)}</p></div></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Sum</th></tr></thead>
+      <tbody>${s.items.map((i) => `<tr><td>${esc(i.name)}</td><td class="num">${i.qty}</td><td class="num">${money(i.price)}</td><td class="num">${money(i.qty * i.price)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td colspan="3">Total</td><td class="num"><strong>${money(s.total)}</strong></td></tr>
+        <tr><td colspan="3">Paid</td><td class="num">${money(s.paid)}</td></tr>
+        ${credit > 0.005 ? `<tr class="due"><td colspan="3">On credit</td><td class="num">${money(credit)}</td></tr>` : ''}</tfoot>
+    </table></div>
+    <div class="btn-row"><button class="btn danger" id="s-del">Delete &amp; restock</button></div>`, (o) => {
+    o.querySelector('#s-del').addEventListener('click', () => confirmDialog('Delete this sale? Stock will be returned to inventory.', () => { Store.deleteSale(id); toast('Sale deleted'); closeModal(); }));
+  });
+}
+function saleForm(presetCustomerId) {
+  const customers = Store.customers(), products = Store.products().filter((p) => p.stock > 0);
+  if (!customers.length) { toast('Add a customer first'); return; }
+  if (!products.length) { toast('No products in stock'); return; }
+  let cart = [];
+  modal('New sale', `<form id="sale-form" class="form">
+      <label>Customer<select name="customer" required>${customers.map((c) => `<option value="${c.id}" ${c.id === presetCustomerId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+      <label>Add product<select id="prod-picker"><option value="">Choose a product…</option>${products.map((p) => `<option value="${p.id}">${esc(p.name)} — ${money(p.price)} (${p.stock} left)</option>`).join('')}</select></label>
+      <div id="cart" class="cart"></div>
+      <div class="sale-total"><span>Total</span><strong id="sale-total-val">${money(0)}</strong></div>
+      <label>Amount paid now<input name="paid" type="number" min="0" step="any" value="0"><button type="button" class="mini-link" id="pay-full">Mark fully paid</button></label>
+      <p class="credit-note" id="credit-note"></p>
+      <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn primary">Record sale</button></div>
+    </form>`, (o) => {
+    const picker = o.querySelector('#prod-picker'), cartEl = o.querySelector('#cart'), totalEl = o.querySelector('#sale-total-val');
+    const paidInput = o.querySelector('[name=paid]'), creditNote = o.querySelector('#credit-note');
+    const total = () => cart.reduce((s, it) => s + it.qty * it.price, 0);
+    function refresh() {
+      cartEl.innerHTML = cart.length ? cart.map((it, idx) => `<div class="cart-row">
+          <span class="cart-name">${esc(it.name)}</span>
+          <div class="qty"><button type="button" data-dec="${idx}">−</button><span>${it.qty}</span><button type="button" data-inc="${idx}">+</button></div>
+          <span class="cart-sum">${money(it.qty * it.price)}</span>
+          <button type="button" class="cart-rm" data-rm="${idx}" aria-label="Remove">✕</button></div>`).join('') : '<p class="empty">No items added.</p>';
+      totalEl.textContent = money(total()); updateCredit();
+      cartEl.querySelectorAll('[data-inc]').forEach((b) => b.onclick = () => changeQty(+b.dataset.inc, 1));
+      cartEl.querySelectorAll('[data-dec]').forEach((b) => b.onclick = () => changeQty(+b.dataset.dec, -1));
+      cartEl.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => { cart.splice(+b.dataset.rm, 1); refresh(); });
+    }
+    function changeQty(idx, delta) { const it = cart[idx], prod = Store.product(it.productId); it.qty = Math.max(1, Math.min(prod.stock, it.qty + delta)); refresh(); }
+    function updateCredit() {
+      const t = total(), paid = Math.min(+paidInput.value || 0, t), credit = t - paid;
+      creditNote.textContent = credit > 0.005 ? `${money(credit)} will be added to the customer's credit.` : (t > 0 ? 'Fully paid.' : '');
+      creditNote.className = 'credit-note' + (credit > 0.005 ? ' warn' : '');
+    }
+    picker.addEventListener('change', () => {
+      const pid = picker.value; if (!pid) return;
+      const prod = Store.product(pid), existing = cart.find((it) => it.productId === pid);
+      if (existing) { if (existing.qty < prod.stock) existing.qty++; } else cart.push({ productId: pid, name: prod.name, price: prod.price, qty: 1 });
+      picker.value = ''; refresh();
+    });
+    paidInput.addEventListener('input', updateCredit);
+    o.querySelector('#pay-full').addEventListener('click', () => { paidInput.value = total(); updateCredit(); });
+    o.querySelector('#sale-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!cart.length) { toast('Add at least one product'); return; }
+      const f = new FormData(e.target);
+      const sale = Store.addSale({ customerId: f.get('customer'), items: cart.map((it) => ({ productId: it.productId, qty: it.qty })), paid: +f.get('paid') || 0 });
+      if (sale) { toast('Sale recorded'); closeModal(); }
+    });
+    refresh();
+  });
+}
+function viewCredit() {
+  const debtors = Store.customers().map((c) => ({ c, bal: Store.balance(c.id) })).filter((x) => x.bal > 0.005).sort((a, b) => b.bal - a.bal);
+  const total = debtors.reduce((s, d) => s + d.bal, 0);
+  app.innerHTML = `<div class="page-head"><div><h1>Credit book</h1><p class="sub">${debtors.length} customer${debtors.length === 1 ? '' : 's'} owe you</p></div></div>
+    <div class="kpis">
+      ${kpi('Total outstanding', money(total), total > 0 ? 'warn' : 'ok', 'Across all customers')}
+      ${kpi('Payments received', money(Store.payments().reduce((s, p) => s + p.amount, 0)), 'ok', 'All time')}
+    </div>
+    <div class="list">${debtors.length ? debtors.map(({ c, bal }) => `
+        <div class="list-row" data-cust="${c.id}"><div class="avatar warn">${esc(c.name.slice(0, 1).toUpperCase())}</div>
+          <div class="row-main"><span class="row-title">${esc(c.name)}</span><span class="row-sub">${esc(c.phone || 'No phone')}</span></div>
+          <div class="row-end"><span class="pill warn">${money(bal)}</span></div></div>`).join('')
+        : `<div class="all-clear">✓ Everyone's paid up. No outstanding credit.</div>`}</div>`;
+  document.querySelectorAll('#view .list-row').forEach((row) => row.addEventListener('click', () => customerDetail(row.dataset.cust)));
+}
+function emptyState(msg) { return `<p class="empty">${esc(msg)}</p>`; }
+function dataMenu() {
+  modal('Data & backup', `<p class="hint-line">Your data lives on this device only. Back it up regularly.</p>
+    <div class="btn-row"><button class="btn primary" id="d-export">Export backup</button><button class="btn ghost" id="d-import">Import backup</button></div>
+    <label class="danger-zone">Reset app<button class="btn danger" id="d-reset">Reset to sample data</button></label>
+    <input type="file" id="import-file" accept="application/json" hidden>`, (o) => {
+    o.querySelector('#d-export').addEventListener('click', () => {
+      const blob = new Blob([Store.export()], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `scentry-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(a.href);
+      toast('Backup downloaded');
+    });
+    const file = o.querySelector('#import-file');
+    o.querySelector('#d-import').addEventListener('click', () => file.click());
+    file.addEventListener('change', () => {
+      const f = file.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => { try { Store.import(reader.result); toast('Backup restored'); closeModal(); } catch (err) { toast('Invalid backup file'); } };
+      reader.readAsText(f);
+    });
+    o.querySelector('#d-reset').addEventListener('click', () => confirmDialog('Reset all data and reload sample data? This cannot be undone.', () => { Store.reset(); toast('Reset done'); closeModal(); }));
+  });
+}
+document.getElementById('data-btn').addEventListener('click', dataMenu);
+
+/* ---------- install prompt (works when served over http/https) ---------- */
+let deferredPrompt = null;
+const installBtn = document.getElementById('install-btn');
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false; });
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; installBtn.hidden = true;
+});
+
+/* ---------- boot ---------- */
+if (!location.hash) location.hash = '#/dashboard';
+render();
+</script>
+</body>
+</html>

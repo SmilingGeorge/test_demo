@@ -1,0 +1,27 @@
+{
+  "name": "Scentry — Perfume Seller Manager",
+  "short_name": "Scentry",
+  "description": "Track customers, credit, inventory and sales for your perfume business — works offline.",
+  "id": "/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14121c",
+  "theme_color": "#14121c",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
